@@ -1,0 +1,10 @@
+<resources>
+    <dimen name="spacing_xlarge">16dp</dimen>
+
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
+    <dimen name="main_padding">8dp</dimen>
+    <dimen name="list_item_size">100dp</dimen>
+    <dimen name="list_weather_icon_size">30dp</dimen>
+</resources>

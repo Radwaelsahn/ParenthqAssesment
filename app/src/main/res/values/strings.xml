@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">parenthq</string>
+    <string name="openWeatherAPIKey">0791df36b036c61994c19f1978cdbf17</string>
+    <string name="icon_extension">.png</string>
+    <string name="weather_icon_description">Weather Icon</string>
+    <string name="menu_search_title">Search</string>
+    <string name="menu_search_hint">Write a city name here</string>
+</resources>

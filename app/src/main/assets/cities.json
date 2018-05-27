@@ -1,0 +1,56 @@
+[
+  {
+    "id": 5717316,
+    "name": "London, UK",
+    "country": "US",
+    "coord": {
+      "lon": -117.009048,
+      "lat": 43.995998
+    }
+  },
+  {
+    "id": 5717316,
+    "name": "Cairo",
+    "country": "US",
+    "coord": {
+      "lon": -117.009048,
+      "lat": 43.995998
+    }
+  },
+  {
+    "id": 361058,
+    "name": "Alexandria",
+    "country": "EG",
+    "coord": {
+      "lon": 29.955271,
+      "lat": 31.215639
+    }
+  },
+  {
+    "id": 349340,
+    "name": "Sharm ash Shaykh",
+    "country": "EG",
+    "coord": {
+      "lon": 34.304989,
+      "lat": 27.85183
+    }
+  },
+  {
+    "id": 359792,
+    "name": "Aswan",
+    "country": "EG",
+    "coord": {
+      "lon": 32.90704,
+      "lat": 24.09343
+    }
+  },
+  {
+    "id": 355795,
+    "name": "Halwan",
+    "country": "EG",
+    "coord": {
+      "lon": 31.30084,
+      "lat": 29.84144
+    }
+  }
+]
