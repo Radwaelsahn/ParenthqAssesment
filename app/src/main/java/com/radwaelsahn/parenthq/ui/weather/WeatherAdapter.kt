@@ -16,7 +16,7 @@ import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.item_forecast.view.*
 
 
-class WeatherAdapter( val context: Context) : RecyclerView.Adapter<WeatherAdapter.ViewHolder>() {
+class WeatherAdapter(val context: Context) : RecyclerView.Adapter<WeatherAdapter.ViewHolder>() {
 
     var forecastList = mutableListOf<ForecastItemViewModel>()
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -31,11 +31,11 @@ class WeatherAdapter( val context: Context) : RecyclerView.Adapter<WeatherAdapte
 
 
     override fun getItemCount(): Int {
-        return 10
+        return forecastList.size
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-
+        Log.i("radwa", "onBindViewHolder")
         if (position < forecastList.size) {
             val weatherItem: ForecastItemViewModel = forecastList.get(position)
             holder?.itemView.descriptionText.text = weatherItem.description

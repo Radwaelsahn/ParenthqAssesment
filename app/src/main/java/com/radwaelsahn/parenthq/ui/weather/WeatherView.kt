@@ -9,7 +9,7 @@ import com.radwaelsahn.parenthq.network.ErrorTypes
 interface WeatherView {
     fun showLoading()
     fun hideLoading()
-    fun updateForecast(forecasts: List<ForecastItemViewModel>)
+    fun updateForecastRecycler(forecasts: List<ForecastItemViewModel>)
     fun showErrorToast(errorType: ErrorTypes)
     fun cityDetected(city: String)
     fun insertWeatherDataInDb(weatherData: WeatherData)

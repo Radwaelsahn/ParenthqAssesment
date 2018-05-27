@@ -67,6 +67,7 @@ class WeatherActivity : AppCompatActivity(), WeatherView, GoogleApiClient.Connec
         getLocation()
         initializeForecastList()
 
+
         cities = weatherPresenter.loadCities(applicationContext)
 
         showCitiesSpinner();
@@ -126,13 +127,16 @@ class WeatherActivity : AppCompatActivity(), WeatherView, GoogleApiClient.Connec
     }
 
 
-    override fun updateForecast(forecasts: List<ForecastItemViewModel>) {
+    override fun updateForecastRecycler(forecasts: List<ForecastItemViewModel>) {
+        Log.i("size",forecasts!!.size.toString())
         if (forecasts.isEmpty()) emptyStateText.visibility = View.VISIBLE
+        else forecastRecyclerView.visibility = View.VISIBLE
         forecastRecyclerView.adapter.safeCast<WeatherAdapter>()?.addForecast(forecasts)
     }
 
     //private fun getForecast(query: String, count: Int) = weatherPresenter.getWeatherForcastforCity(query, count)
     private fun getForecast(cityName: String, count: Int) {
+        Log.i("selectedcity",cityName)
         if (isConnectedToInternet())
             weatherPresenter.getWeatherForcastforCity(cityName, count)
         else
@@ -140,11 +144,6 @@ class WeatherActivity : AppCompatActivity(), WeatherView, GoogleApiClient.Connec
     }
 
     inline fun <reified T> Any.safeCast() = this as? T
-
-    fun Activity.toast(toastMessage: String, duration: Int = Toast.LENGTH_SHORT) {
-        Toast.makeText(this, toastMessage, duration).show()
-    }
-
 
     private fun initializeForecastList() {
         forecastRecyclerView.apply {
@@ -164,7 +163,6 @@ class WeatherActivity : AppCompatActivity(), WeatherView, GoogleApiClient.Connec
             searchMenuItem.queryHint = getString(R.string.menu_search_hint)
             searchMenuItem.setOnQueryTextListener(object : android.support.v7.widget.SearchView.OnQueryTextListener {
                 override fun onQueryTextSubmit(query: String): Boolean {
-                    Log.i("radwa", "sss");
                     getForecast(query, 5)
                     menuItem.collapseActionView()
                     return false
@@ -275,11 +273,13 @@ class WeatherActivity : AppCompatActivity(), WeatherView, GoogleApiClient.Connec
     }
 
     override fun cityDetected(city: String) {
-
+        Log.i("radwa", "cityDetected:  ${city}")
         if (!city.isNullOrEmpty()) {
             var indx: Int = City().indexOf(cities, "aswan")//selectedCity)
             if (indx > -1)
                 cities_spinner.setSelection(indx)
+
+            Log.i("radwa", "cityDetected:  ${city} ${indx}")
         }
     }
 
@@ -300,11 +300,13 @@ class WeatherActivity : AppCompatActivity(), WeatherView, GoogleApiClient.Connec
 
         val task = Runnable {
             val weatherData =
-                    mDb?.weatherDataDao()?.getAll()
+                    mDb?.weatherDataDao()?.getCityForecast(cityName = cityName)
             mUiHandler.post({
                 if (weatherData == null || weatherData?.size == 0) {
-                    showMessage("No data in cache..!!")
+                    Log.i("radwa","1")
+                    showNoData()
                 } else {
+                    Log.i("radwa","2")
                     weatherPresenter.convertToViewModel(weatherData, cityName)
                     //bindDataWithUi(weatherData = weatherData?.get(0))
                 }
@@ -312,6 +314,13 @@ class WeatherActivity : AppCompatActivity(), WeatherView, GoogleApiClient.Connec
         }
         mDbWorkerThread.postTask(task)
 
+    }
+
+    private fun showNoData() {
+        showMessage("No data in cache..!!")
+        forecastRecyclerView.visibility = View.GONE
+        emptyStateText.visibility = View.GONE
+        loadingSpinner.visibility = View.GONE
     }
 
     override fun insertWeatherDataInDb(weatherData: WeatherData) {

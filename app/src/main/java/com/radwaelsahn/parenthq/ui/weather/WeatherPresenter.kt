@@ -9,13 +9,13 @@ import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.radwaelsahn.parenthq.data.db.Entities.WeatherData
+import com.radwaelsahn.parenthq.extensions.readJSONfromFile
 import com.radwaelsahn.parenthq.model.City
 import com.radwaelsahn.parenthq.model.Forcast
 import com.radwaelsahn.parenthq.model.ForecastItemViewModel
 import com.radwaelsahn.parenthq.model.response.ForcastResponse
 import com.radwaelsahn.parenthq.network.ErrorTypes
 import com.radwaelsahn.parenthq.network.OpenWeatherAPI
-import com.radwaelsahn.parenthq.readJSONfromFile
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -92,7 +92,7 @@ class WeatherPresenter(var weatherView: WeatherView, var applicationComponent: A
                     description = forecastDetail.description[0].description, city = cityName)
             forecasts.add(forecastItem)
 
-            val forecastEntityItem = WeatherData(null, degreeMax = dayTemp.toString(),
+            val forecastEntityItem = WeatherData( degreeMax = dayTemp.toString(),
                     degreeMin = nitTemp.toString(),
                     date = date,
                     icon = forecastDetail.description[0].icon,
@@ -101,7 +101,7 @@ class WeatherPresenter(var weatherView: WeatherView, var applicationComponent: A
             weatherView.insertWeatherDataInDb(forecastEntityItem)
 
         }
-        weatherView.updateForecast(forecasts)
+        weatherView.updateForecastRecycler(forecasts)
     }
 
     fun convertToViewModel(weatherDataList: List<WeatherData>, cityName: String) {
@@ -114,7 +114,8 @@ class WeatherPresenter(var weatherView: WeatherView, var applicationComponent: A
                     description = forecastDetail.description, city = cityName)
             forecasts.add(forecastItem)
         }
-        weatherView.updateForecast(forecasts)
+
+        weatherView.updateForecastRecycler(forecasts)
     }
 
     private fun getDate(date: Long): String {

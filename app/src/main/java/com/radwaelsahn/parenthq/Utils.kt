@@ -9,12 +9,6 @@ import java.nio.charset.Charset
 import java.text.SimpleDateFormat
 import java.util.*
 
-fun readJSONfromFile(f: String, context: Context): String {
-
-    return context.assets.open(f).bufferedReader().use { it.readText() }
-
-}
-
 
 fun getDate(date: Long): String {
     val timeFormatter = SimpleDateFormat("dd.MM.yyyy")

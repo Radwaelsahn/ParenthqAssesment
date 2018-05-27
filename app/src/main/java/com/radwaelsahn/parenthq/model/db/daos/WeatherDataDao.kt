@@ -8,13 +8,15 @@ import com.radwaelsahn.parenthq.data.db.Entities.WeatherData
 
 @Dao
 interface WeatherDataDao {
-
-    @Query("SELECT * from weatherData")
-    fun getAll(): List<WeatherData>
+    @Query("SELECT DISTINCT city from weatherData")
+    fun getCities(): List<String>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(weatherData: WeatherData)
 
     @Query("DELETE from weatherData")
     fun deleteAll()
+
+    @Query("SELECT * from weatherData where city = :cityName")
+    fun getCityForecast(cityName: String): List<WeatherData>
 }

@@ -6,8 +6,9 @@ import android.arch.persistence.room.PrimaryKey
 import com.radwaelsahn.parenthq.model.City
 
 
-@Entity(tableName = "weatherData")
-data class WeatherData(@PrimaryKey(autoGenerate = true) var id: Long?,
+@Entity(tableName = "weatherData" ,primaryKeys = arrayOf("date", "city"))
+data class WeatherData(
+//(@PrimaryKey(autoGenerate = true) var id: Long?,
                        @ColumnInfo(name = "degreeMax") var degreeMax: String,
                        @ColumnInfo(name = "degreeMin") var degreeMin: String,
                        @ColumnInfo(name = "icon") var icon: String,
@@ -15,6 +16,6 @@ data class WeatherData(@PrimaryKey(autoGenerate = true) var id: Long?,
                        @ColumnInfo(name = "description") var description: String,
                        @ColumnInfo(name = "city") var city: String
 ) {
-    constructor() : this(null,
+    constructor() : this(
             "", "", "", "", "", "")
 }
