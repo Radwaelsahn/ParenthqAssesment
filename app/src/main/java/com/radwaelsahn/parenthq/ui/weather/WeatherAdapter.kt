@@ -35,7 +35,6 @@ class WeatherAdapter(val context: Context) : RecyclerView.Adapter<WeatherAdapter
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        Log.i("radwa", "onBindViewHolder")
         if (position < forecastList.size) {
             val weatherItem: ForecastItemViewModel = forecastList.get(position)
             holder?.itemView.descriptionText.text = weatherItem.description

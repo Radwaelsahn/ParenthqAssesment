@@ -1,10 +1,10 @@
 package com.radwaelsahn.parenthq.ui.weather
 
-import android.app.Application
 import android.content.Context
 import android.location.Address
 import android.location.Geocoder
 import android.location.Location
+import android.os.Handler
 import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -23,28 +23,18 @@ import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
 
-class WeatherPresenter(var weatherView: WeatherView, var applicationComponent: Application) : WeatherContract {
-//    @Inject
-//    lateinit var mNetworkApi: INetworkApi
+class WeatherPresenter(var weatherView: WeatherView, applicationContext: Context) : WeatherContract {
 
     @Inject
     lateinit var api: OpenWeatherAPI
 
-//    init {
-//        (applicationComponent as ApplicationClass).applicationComponent.inject(this)
-//    }
+    lateinit var weatherInteractor: WeatherInteractor
+    lateinit var cities: List<String>
+    private val mApplicationContext: Context
 
-    override fun getWeatherForcast() {
-//
-//        weatherView.showSpinner()
-////        var weather = mNetworkApi.getWeather5Days()
-//        var weather = mNetworkApi.dailyForecast()
-//        weather.subscribeOn(IoScheduler()).observeOn(AndroidSchedulers.mainThread())
-//                .subscribe {
-//                    Log.i("response", it.toString())
-//                    weatherView.hideSpinner()
-//                    weatherView.showWeather(it)
-//                }
+    init {
+        mApplicationContext = applicationContext
+        weatherInteractor = WeatherInteractor(applicationContext)
     }
 
 
@@ -55,9 +45,9 @@ class WeatherPresenter(var weatherView: WeatherView, var applicationComponent: A
 
             override fun onResponse(call: Call<ForcastResponse>, response: Response<ForcastResponse>) {
                 Log.i("response", response.toString())
+                weatherView.hideLoading()
                 response.body()?.let {
-                    createListForView(it,cityName)
-                    weatherView.hideLoading()
+                    createListForView(it, cityName)
                 } ?: weatherView.showErrorToast(ErrorTypes.NO_RESULT_FOUND)
             }
 
@@ -70,14 +60,40 @@ class WeatherPresenter(var weatherView: WeatherView, var applicationComponent: A
         })
     }
 
-
-    override fun loadCities(applicationContext: Context): List<City> {
-        val citiesJson = readJSONfromFile("cities.json", applicationContext)
+    override fun loadCities(): List<City> {
+        val citiesJson = readJSONfromFile("cities.json", mApplicationContext)
         var gson = Gson()
         var cities = gson.fromJson<List<City>>(citiesJson, object : TypeToken<List<City>>() {}.type)
 
         return cities
     }
+
+    override fun getCitiesFromDB(): List<String> {
+        return weatherInteractor.getCitiesFromDB(this)
+    }
+
+    override fun getForcastFromDB(cityName: String) {
+        weatherInteractor.getWeatherDataFromDb(this, cityName)
+    }
+
+
+    fun updateCitiesUI(citiesDb: List<String>) {
+        cities = citiesDb
+        for (city in cities)
+            Log.i("city", city)
+
+        weatherView.showCitiesSpinner(cities)
+
+        Log.i("radwa", "updateCities")
+        //Log.i("cities4", "result" + citiesDb!!.size.toString())
+
+
+    }
+
+    override fun returnCities(): List<String> {
+        return cities
+    }
+
 
     private fun createListForView(weatherResponse: ForcastResponse, cityName: String) {
         val forecasts = mutableListOf<ForecastItemViewModel>()
@@ -92,7 +108,7 @@ class WeatherPresenter(var weatherView: WeatherView, var applicationComponent: A
                     description = forecastDetail.description[0].description, city = cityName)
             forecasts.add(forecastItem)
 
-            val forecastEntityItem = WeatherData( degreeMax = dayTemp.toString(),
+            val forecastEntityItem = WeatherData(degreeMax = dayTemp.toString(),
                     degreeMin = nitTemp.toString(),
                     date = date,
                     icon = forecastDetail.description[0].icon,
@@ -102,6 +118,7 @@ class WeatherPresenter(var weatherView: WeatherView, var applicationComponent: A
 
         }
         weatherView.updateForecastRecycler(forecasts)
+
     }
 
     fun convertToViewModel(weatherDataList: List<WeatherData>, cityName: String) {
@@ -139,5 +156,13 @@ class WeatherPresenter(var weatherView: WeatherView, var applicationComponent: A
         weatherView.cityDetected(city)
 
         return city
+    }
+
+    fun showNoData() {
+        weatherView.showNoData()
+    }
+
+    override fun onDestroy() {
+        weatherInteractor.onDestroy()
     }
 }

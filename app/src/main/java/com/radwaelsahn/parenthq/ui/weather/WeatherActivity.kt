@@ -1,7 +1,6 @@
 package com.radwaelsahn.parenthq.ui.weather
 
 import android.Manifest
-import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
 import android.content.DialogInterface
@@ -21,7 +20,6 @@ import android.view.Menu
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
-import android.widget.SearchView
 import android.widget.Toast
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.api.GoogleApiClient
@@ -39,22 +37,19 @@ import com.radwaelsahn.parenthq.model.City
 import com.radwaelsahn.parenthq.model.ForecastItemViewModel
 import com.radwaelsahn.parenthq.network.ErrorTypes
 import kotlinx.android.synthetic.main.activity_main.*
-import java.util.*
 
 /**
  * Created by RadwaElsahn on 23/05/2018.
  */
 class WeatherActivity : AppCompatActivity(), WeatherView, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
 
-
     lateinit var weatherPresenter: WeatherPresenter
     lateinit var cities: List<City>
-
+    lateinit var cities_adapter: ArrayAdapter<String>
     private val TAG = "MainActivity"
     private lateinit var mGoogleApiClient: GoogleApiClient
     private var mLocationManager: LocationManager? = null
     lateinit var mLocation: Location
-
 
     private var mDb: WeatherDataBase? = null
     private lateinit var mDbWorkerThread: DbWorkerThread
@@ -65,29 +60,33 @@ class WeatherActivity : AppCompatActivity(), WeatherView, GoogleApiClient.Connec
         injectDI()
         setContentView(R.layout.activity_main)
         getLocation()
-        initializeForecastList()
-
-
-        cities = weatherPresenter.loadCities(applicationContext)
-
-        showCitiesSpinner();
         initDBResources(applicationContext)
+        initializeForecastList()
+        weatherPresenter.getCitiesFromDB()
+        // getCitiesFromDB()
+        //cities = weatherPresenter.loadCities()
+//        showCitiesSpinner()
+
+        //        Log.i("cities", weatherPresenter.returnCities().size.toString())
     }
 
 
-    private fun showCitiesSpinner() {
+    override fun showCitiesSpinner(cities: List<String>) {
+        cities_adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, cities)
+        cities_spinner.adapter = cities_adapter
 
-        cities_spinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, cities)
         cities_spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onNothingSelected(p0: AdapterView<*>?) {
             }
 
             override fun onItemSelected(p0: AdapterView<*>?, p1: View?, position: Int, p3: Long) {
-                getForecast(cities[position].toString(), 5)
+                Log.i("radwa", "itemSelected")
+                getForecast(cities_spinner.adapter.getItem(position).toString(), 5)
             }
         }
-    }
+//        cities_adapter.notifyDataSetChanged();
 
+    }
 
     override fun onResume() {
         super.onResume()
@@ -128,7 +127,7 @@ class WeatherActivity : AppCompatActivity(), WeatherView, GoogleApiClient.Connec
 
 
     override fun updateForecastRecycler(forecasts: List<ForecastItemViewModel>) {
-        Log.i("size",forecasts!!.size.toString())
+
         if (forecasts.isEmpty()) emptyStateText.visibility = View.VISIBLE
         else forecastRecyclerView.visibility = View.VISIBLE
         forecastRecyclerView.adapter.safeCast<WeatherAdapter>()?.addForecast(forecasts)
@@ -136,7 +135,11 @@ class WeatherActivity : AppCompatActivity(), WeatherView, GoogleApiClient.Connec
 
     //private fun getForecast(query: String, count: Int) = weatherPresenter.getWeatherForcastforCity(query, count)
     private fun getForecast(cityName: String, count: Int) {
-        Log.i("selectedcity",cityName)
+        Log.i("selectedcity", cityName)
+        if (cityName.isNullOrEmpty()) {
+            Toast.makeText(this, "please search for a city", Toast.LENGTH_SHORT).show();
+            return
+        }
         if (isConnectedToInternet())
             weatherPresenter.getWeatherForcastforCity(cityName, count)
         else
@@ -275,7 +278,8 @@ class WeatherActivity : AppCompatActivity(), WeatherView, GoogleApiClient.Connec
     override fun cityDetected(city: String) {
         Log.i("radwa", "cityDetected:  ${city}")
         if (!city.isNullOrEmpty()) {
-            var indx: Int = City().indexOf(cities, "aswan")//selectedCity)
+            //var indx: Int = City().indexOf(cities, "aswan")//selectedCity)
+            var indx = weatherPresenter.returnCities()!!.indexOf(city)
             if (indx > -1)
                 cities_spinner.setSelection(indx)
 
@@ -303,10 +307,8 @@ class WeatherActivity : AppCompatActivity(), WeatherView, GoogleApiClient.Connec
                     mDb?.weatherDataDao()?.getCityForecast(cityName = cityName)
             mUiHandler.post({
                 if (weatherData == null || weatherData?.size == 0) {
-                    Log.i("radwa","1")
                     showNoData()
                 } else {
-                    Log.i("radwa","2")
                     weatherPresenter.convertToViewModel(weatherData, cityName)
                     //bindDataWithUi(weatherData = weatherData?.get(0))
                 }
@@ -316,7 +318,7 @@ class WeatherActivity : AppCompatActivity(), WeatherView, GoogleApiClient.Connec
 
     }
 
-    private fun showNoData() {
+    override fun showNoData() {
         showMessage("No data in cache..!!")
         forecastRecyclerView.visibility = View.GONE
         emptyStateText.visibility = View.GONE
@@ -331,6 +333,8 @@ class WeatherActivity : AppCompatActivity(), WeatherView, GoogleApiClient.Connec
     override fun onDestroy() {
         super.onDestroy()
 
+        weatherPresenter.onDestroy()
+
         if (WeatherDataBase != null) {
             WeatherDataBase.destroyInstance()
             mDbWorkerThread.quit()
@@ -340,4 +344,9 @@ class WeatherActivity : AppCompatActivity(), WeatherView, GoogleApiClient.Connec
     override fun showMessage(message: String) {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show()
     }
+
+    override fun getContext(): Context {
+        return applicationContext
+    }
+
 }

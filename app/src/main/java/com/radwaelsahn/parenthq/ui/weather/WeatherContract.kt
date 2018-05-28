@@ -7,8 +7,11 @@ import com.radwaelsahn.parenthq.model.City
 
 interface WeatherContract {
 
-    fun getWeatherForcast()
-    fun getWeatherForcastforCity(city: String,count:Int)
-    fun loadCities(applicationContext: Context): List<City>
+    fun getWeatherForcastforCity(city: String, count: Int)
+    fun getCitiesFromDB():List<String>
+    fun returnCities(): List<String>
     fun getAddress(location: Location?, context: Context): String
+    fun onDestroy()
+    fun loadCities(): List<City>
+    fun getForcastFromDB(cityName: String)
 }
