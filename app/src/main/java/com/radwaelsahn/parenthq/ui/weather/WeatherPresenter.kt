@@ -10,9 +10,9 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.radwaelsahn.parenthq.data.db.Entities.WeatherData
 import com.radwaelsahn.parenthq.extensions.readJSONfromFile
-import com.radwaelsahn.parenthq.model.City
 import com.radwaelsahn.parenthq.model.Forcast
 import com.radwaelsahn.parenthq.model.ForecastItemViewModel
+import com.radwaelsahn.parenthq.model.response.City
 import com.radwaelsahn.parenthq.model.response.ForcastResponse
 import com.radwaelsahn.parenthq.network.ErrorTypes
 import com.radwaelsahn.parenthq.network.OpenWeatherAPI
@@ -28,7 +28,7 @@ class WeatherPresenter(var weatherView: WeatherView, applicationContext: Context
     @Inject
     lateinit var api: OpenWeatherAPI
 
-    lateinit var weatherInteractor: WeatherInteractor
+    var weatherInteractor: IWeatherInteractor
     var cities = emptyList<String>()
     private val mApplicationContext: Context
 
@@ -47,6 +47,7 @@ class WeatherPresenter(var weatherView: WeatherView, applicationContext: Context
 
             override fun onResponse(call: Call<ForcastResponse>, response: Response<ForcastResponse>) {
                 Log.i("response", response.toString())
+                selectedCity = cityName
                 weatherView.hideLoading()
                 response.body()?.let {
                     createListForView(it, cityName)
@@ -112,11 +113,13 @@ class WeatherPresenter(var weatherView: WeatherView, applicationContext: Context
                     icon = forecastDetail.description[0].icon,
                     description = forecastDetail.description[0].description, city = cityName)
 
-            weatherView.insertWeatherDataInDb(forecastEntityItem)
+            weatherInteractor.insertWeatherDataInDb(forecastEntityItem)
 
         }
         Log.i("radwa", "!!!")
         weatherView.updateUI(forecasts)
+        if (!cities.contains(cityName))
+            getCitiesFromDB()
 
     }
 
@@ -164,5 +167,10 @@ class WeatherPresenter(var weatherView: WeatherView, applicationContext: Context
 
     override fun onDestroy() {
         weatherInteractor.onDestroy()
+    }
+
+    override fun clearDataFromDB() {
+        weatherInteractor.clearData()
+        updateCitiesUI(emptyList())
     }
 }

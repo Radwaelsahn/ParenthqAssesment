@@ -5,4 +5,5 @@
     <string name="weather_icon_description">Weather Icon</string>
     <string name="menu_search_title">Search</string>
     <string name="menu_search_hint">Write a city name here</string>
+    <string name="clear">clear</string>
 </resources>

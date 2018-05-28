@@ -2,8 +2,7 @@ package com.radwaelsahn.parenthq.ui.weather
 
 import android.content.Context
 import android.location.Location
-import com.radwaelsahn.parenthq.data.db.Entities.WeatherData
-import com.radwaelsahn.parenthq.model.City
+import com.radwaelsahn.parenthq.model.response.City
 
 interface WeatherContract {
 
@@ -14,4 +13,5 @@ interface WeatherContract {
     fun onDestroy()
     fun loadCities(): List<City>
     fun getForcastFromDB(cityName: String)
+    fun clearDataFromDB()
 }

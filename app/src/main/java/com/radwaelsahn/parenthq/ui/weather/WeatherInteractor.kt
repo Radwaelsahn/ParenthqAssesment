@@ -4,10 +4,11 @@ import android.content.Context
 import android.os.Handler
 import android.util.Log
 import com.radwaelsahn.parenthq.data.db.DbWorkerThread
+import com.radwaelsahn.parenthq.data.db.Entities.WeatherData
 import com.radwaelsahn.parenthq.data.db.WeatherDataBase
 
 
-class WeatherInteractor(applicationContext: Context) {
+class WeatherInteractor(applicationContext: Context) : IWeatherInteractor {
     private var mDb: WeatherDataBase? = null
     private lateinit var mDbWorkerThread: DbWorkerThread
     private val mUiHandler = Handler()
@@ -17,7 +18,7 @@ class WeatherInteractor(applicationContext: Context) {
         initDBResources(applicationContext)
     }
 
-    fun initDBResources(applicationContext: Context) {
+    override fun initDBResources(applicationContext: Context) {
         mDbWorkerThread = DbWorkerThread("dbWorkerThread")
         mDbWorkerThread.start()
 
@@ -25,7 +26,7 @@ class WeatherInteractor(applicationContext: Context) {
     }
 
 
-    fun getCitiesFromDB(weatherPresenter: WeatherPresenter): List<String> {
+    override fun getCitiesFromDB(weatherPresenter: WeatherPresenter): List<String> {
         val task = Runnable {
             val citiesData =
                     mDb?.weatherDataDao()?.getCities()
@@ -42,7 +43,7 @@ class WeatherInteractor(applicationContext: Context) {
 
     }
 
-    fun getWeatherDataFromDb(weatherPresenter: WeatherPresenter,cityName: String) {
+    override fun getWeatherDataFromDb(weatherPresenter: WeatherPresenter, cityName: String) {
 
         val task = Runnable {
             val weatherData =
@@ -60,10 +61,20 @@ class WeatherInteractor(applicationContext: Context) {
     }
 
 
-    fun onDestroy() {
+    override fun onDestroy() {
         if (WeatherDataBase != null) {
             WeatherDataBase.destroyInstance()
             mDbWorkerThread.quit()
         }
+    }
+
+    override fun insertWeatherDataInDb(weatherData: WeatherData) {
+        val task = Runnable { mDb?.weatherDataDao()?.insert(weatherData) }
+        mDbWorkerThread.postTask(task)
+    }
+
+    override fun clearData() {
+        val task = Runnable { mDb?.weatherDataDao()?.deleteAll() }
+        mDbWorkerThread.postTask(task)
     }
 }

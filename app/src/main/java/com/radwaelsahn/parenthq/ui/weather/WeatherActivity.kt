@@ -27,13 +27,9 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.tasks.OnSuccessListener
 import com.radwaelsahn.parenthq.R
-import com.radwaelsahn.parenthq.data.db.DbWorkerThread
-import com.radwaelsahn.parenthq.data.db.Entities.WeatherData
-import com.radwaelsahn.parenthq.data.db.WeatherDataBase
 import com.radwaelsahn.parenthq.di.component.DaggerOpenWeatherAPIComponent
 import com.radwaelsahn.parenthq.di.module.OpenWeatherAPIModule
 import com.radwaelsahn.parenthq.extensions.isConnectedToInternet
-import com.radwaelsahn.parenthq.model.City
 import com.radwaelsahn.parenthq.model.ForecastItemViewModel
 import com.radwaelsahn.parenthq.network.ErrorTypes
 import kotlinx.android.synthetic.main.activity_main.*
@@ -50,8 +46,8 @@ class WeatherActivity : AppCompatActivity(), WeatherView, GoogleApiClient.Connec
     private var mLocationManager: LocationManager? = null
     lateinit var mLocation: Location
 
-    private var mDb: WeatherDataBase? = null
-    private lateinit var mDbWorkerThread: DbWorkerThread
+//    private var mDb: WeatherDataBase? = null
+//    private lateinit var mDbWorkerThread: DbWorkerThread
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -98,6 +94,7 @@ class WeatherActivity : AppCompatActivity(), WeatherView, GoogleApiClient.Connec
 
     override fun showErrorToast(errorType: ErrorTypes) {
         Toast.makeText(this, errorType.name, Toast.LENGTH_LONG).show()
+        forecastRecyclerView.visibility = View.GONE
     }
 
 
@@ -116,11 +113,19 @@ class WeatherActivity : AppCompatActivity(), WeatherView, GoogleApiClient.Connec
         if (forecasts.isEmpty()) emptyStateText.visibility = View.VISIBLE
         else forecastRecyclerView.visibility = View.VISIBLE
         forecastRecyclerView.adapter.safeCast<WeatherAdapter>()?.addForecast(forecasts)
-        //weatherPresenter.getCitiesFromDB()
     }
 
     override fun updateCitiesUI(cities: List<String>) {
-        cities_spinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, cities)
+        Log.i("radwa", "updateCitiesUI")
+        if (cities.size > 0) {
+            layout_cities.setVisibility(View.VISIBLE)
+            cities_spinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, cities)
+            var selectedIndx: Int = cities.indexOf(weatherPresenter.selectedCity)
+            Log.i("selectedIndx", "${ selectedIndx }  city ${ weatherPresenter.selectedCity }")
+            if (selectedIndx != -1)
+                cities_spinner.setSelection(selectedIndx)
+        } else
+            layout_cities.setVisibility(View.GONE)
 
         //cities_spinner.adapter.notifyDataSetChanged()
     }
@@ -142,7 +147,7 @@ class WeatherActivity : AppCompatActivity(), WeatherView, GoogleApiClient.Connec
     inline fun <reified T> Any.safeCast() = this as? T
 
     private fun initialize() {
-        initDBResources(applicationContext)
+//        initDBResources(applicationContext)
 
         forecastRecyclerView.apply {
             layoutManager = LinearLayoutManager(context)
@@ -159,6 +164,13 @@ class WeatherActivity : AppCompatActivity(), WeatherView, GoogleApiClient.Connec
                 getForecast(cities_spinner.adapter.getItem(position).toString(), 5)
             }
         }
+
+        btn_remove_cities.setOnClickListener { clearCities() }
+    }
+
+    private fun clearCities() {
+        weatherPresenter.clearDataFromDB()
+
     }
 
 
@@ -229,11 +241,6 @@ class WeatherActivity : AppCompatActivity(), WeatherView, GoogleApiClient.Connec
     override fun onLocationChanged(location: Location) {
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-
-    }
-
     override fun onConnected(p0: Bundle?) {
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -297,12 +304,12 @@ class WeatherActivity : AppCompatActivity(), WeatherView, GoogleApiClient.Connec
         }
     }
 
-    fun initDBResources(applicationContext: Context) {
-        mDbWorkerThread = DbWorkerThread("dbWorkerThread")
-        mDbWorkerThread.start()
-
-        mDb = WeatherDataBase.getInstance(applicationContext)
-    }
+//    fun initDBResources(applicationContext: Context) {
+//        mDbWorkerThread = DbWorkerThread("dbWorkerThread")
+//        mDbWorkerThread.start()
+//
+//        mDb = WeatherDataBase.getInstance(applicationContext)
+//    }
 
     override fun showNoData() {
         showMessage("No data in cache..!!")
@@ -311,20 +318,20 @@ class WeatherActivity : AppCompatActivity(), WeatherView, GoogleApiClient.Connec
         loadingSpinner.visibility = View.GONE
     }
 
-    override fun insertWeatherDataInDb(weatherData: WeatherData) {
-        val task = Runnable { mDb?.weatherDataDao()?.insert(weatherData) }
-        mDbWorkerThread.postTask(task)
-    }
+//    override fun insertWeatherDataInDb(weatherData: WeatherData) {
+//        val task = Runnable { mDb?.weatherDataDao()?.insert(weatherData) }
+//        mDbWorkerThread.postTask(task)
+//    }
 
     override fun onDestroy() {
         super.onDestroy()
 
         weatherPresenter.onDestroy()
 
-        if (WeatherDataBase != null) {
-            WeatherDataBase.destroyInstance()
-            mDbWorkerThread.quit()
-        }
+//        if (WeatherDataBase != null) {
+//            WeatherDataBase.destroyInstance()
+//            mDbWorkerThread.quit()
+//        }
     }
 
     override fun showMessage(message: String) {

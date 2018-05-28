@@ -23,12 +23,17 @@ import org.mockito.junit.MockitoJUnit
 class WeatherPresenterTest {
 
 
-    @Mock var mMockContext: Context? = null
-    @Mock private lateinit var weatherView: WeatherView
-    @JvmField @Rule var mockitoRule = MockitoJUnit.rule()
+    @Mock
+    var mMockContext: Context? = null
+    @Mock
+    private lateinit var weatherView: WeatherView
+    @JvmField
+    @Rule
+    var mockitoRule = MockitoJUnit.rule()
     private lateinit var presenter: WeatherPresenter
 
-    @Before fun setUp() {
+    @Before
+    fun setUp() {
         presenter = WeatherPresenter(weatherView, weatherView.getContext())
     }
 
@@ -79,10 +84,6 @@ class WeatherPresenterTest {
         }
 
         override fun cityDetected(city: String) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
-
-        override fun insertWeatherDataInDb(weatherData: WeatherData) {
             TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
         }
 
