@@ -44,8 +44,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 class WeatherActivity : AppCompatActivity(), WeatherView, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, com.google.android.gms.location.LocationListener {
 
     lateinit var weatherPresenter: WeatherPresenter
-    lateinit var cities: List<City>
-    lateinit var cities_adapter: ArrayAdapter<String>
+    var cities = emptyList<String>()
     private val TAG = "MainActivity"
     private lateinit var mGoogleApiClient: GoogleApiClient
     private var mLocationManager: LocationManager? = null
@@ -53,39 +52,25 @@ class WeatherActivity : AppCompatActivity(), WeatherView, GoogleApiClient.Connec
 
     private var mDb: WeatherDataBase? = null
     private lateinit var mDbWorkerThread: DbWorkerThread
-    private val mUiHandler = Handler()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         injectDI()
         setContentView(R.layout.activity_main)
-        getLocation()
-        initDBResources(applicationContext)
-        initializeForecastList()
+        initialize()
+        callFirstForecast()
+
         weatherPresenter.getCitiesFromDB()
-        // getCitiesFromDB()
+
         //cities = weatherPresenter.loadCities()
 //        showCitiesSpinner()
 
         //        Log.i("cities", weatherPresenter.returnCities().size.toString())
     }
 
-
-    override fun showCitiesSpinner(cities: List<String>) {
-        cities_adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, cities)
-        cities_spinner.adapter = cities_adapter
-
-        cities_spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onNothingSelected(p0: AdapterView<*>?) {
-            }
-
-            override fun onItemSelected(p0: AdapterView<*>?, p1: View?, position: Int, p3: Long) {
-                Log.i("radwa", "itemSelected")
-                getForecast(cities_spinner.adapter.getItem(position).toString(), 5)
-            }
-        }
-//        cities_adapter.notifyDataSetChanged();
-
+    private fun callFirstForecast() {
+        if (weatherPresenter.selectedCity.isNullOrEmpty())
+            getLocation()
     }
 
     override fun onResume() {
@@ -126,16 +111,23 @@ class WeatherActivity : AppCompatActivity(), WeatherView, GoogleApiClient.Connec
     }
 
 
-    override fun updateForecastRecycler(forecasts: List<ForecastItemViewModel>) {
-
+    override fun updateUI(forecasts: List<ForecastItemViewModel>) {
+//        Log.i("updateUI", "a")
         if (forecasts.isEmpty()) emptyStateText.visibility = View.VISIBLE
         else forecastRecyclerView.visibility = View.VISIBLE
         forecastRecyclerView.adapter.safeCast<WeatherAdapter>()?.addForecast(forecasts)
+        //weatherPresenter.getCitiesFromDB()
+    }
+
+    override fun updateCitiesUI(cities: List<String>) {
+        cities_spinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, cities)
+
+        //cities_spinner.adapter.notifyDataSetChanged()
     }
 
     //private fun getForecast(query: String, count: Int) = weatherPresenter.getWeatherForcastforCity(query, count)
     private fun getForecast(cityName: String, count: Int) {
-        Log.i("selectedcity", cityName)
+        Log.i("getForcast", cityName)
         if (cityName.isNullOrEmpty()) {
             Toast.makeText(this, "please search for a city", Toast.LENGTH_SHORT).show();
             return
@@ -143,15 +135,29 @@ class WeatherActivity : AppCompatActivity(), WeatherView, GoogleApiClient.Connec
         if (isConnectedToInternet())
             weatherPresenter.getWeatherForcastforCity(cityName, count)
         else
-            getWeatherDataFromDb(this, cityName)
+            weatherPresenter.getForcastFromDB(cityName)
+        //getWeatherDataFromDb(this, cityName)
     }
 
     inline fun <reified T> Any.safeCast() = this as? T
 
-    private fun initializeForecastList() {
+    private fun initialize() {
+        initDBResources(applicationContext)
+
         forecastRecyclerView.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = WeatherAdapter(applicationContext)
+        }
+
+        cities_spinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, cities)
+        cities_spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onNothingSelected(p0: AdapterView<*>?) {
+            }
+
+            override fun onItemSelected(p0: AdapterView<*>?, p1: View?, position: Int, p3: Long) {
+                Log.i("radwa", "itemSelected")
+                getForecast(cities_spinner.adapter.getItem(position).toString(), 5)
+            }
         }
     }
 
@@ -216,13 +222,16 @@ class WeatherActivity : AppCompatActivity(), WeatherView, GoogleApiClient.Connec
     }
 
     override fun onConnectionFailed(connectionResult: ConnectionResult) {
-        Log.i(TAG, "Connection failed. Error: " + connectionResult.getErrorCode());
+        Log.i("a", "onConnectionFailed")
+        getForecast("London, UK", 5)
     }
 
     override fun onLocationChanged(location: Location) {
-//        var msg = "Updated Location: Latitude " + location.longitude.toString() + location.longitude
-//        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-//        Log.i("location", location.longitude.toString() + location.longitude)
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
     }
 
     override fun onConnected(p0: Bundle?) {
@@ -251,7 +260,6 @@ class WeatherActivity : AppCompatActivity(), WeatherView, GoogleApiClient.Connec
                 })
     }
 
-
     private fun checkLocation(): Boolean {
         if (!isLocationEnabled())
             showAlert();
@@ -279,18 +287,14 @@ class WeatherActivity : AppCompatActivity(), WeatherView, GoogleApiClient.Connec
         Log.i("radwa", "cityDetected:  ${city}")
         if (!city.isNullOrEmpty()) {
             //var indx: Int = City().indexOf(cities, "aswan")//selectedCity)
-            var indx = weatherPresenter.returnCities()!!.indexOf(city)
-            if (indx > -1)
-                cities_spinner.setSelection(indx)
+            if (weatherPresenter.returnCities() != null) {
+                var indx = weatherPresenter.returnCities().indexOf(city)
+                if (indx > -1)
+                    cities_spinner.setSelection(indx)
+                Log.i("radwa", "cityDetected:  ${city} ${indx}")
+            }
 
-            Log.i("radwa", "cityDetected:  ${city} ${indx}")
         }
-    }
-
-
-    fun getWeatherDataFromDb(context: Context, cityName: String) {
-        //initDBResources(context)
-        fetchWeatherDataFromDb(cityName)
     }
 
     fun initDBResources(applicationContext: Context) {
@@ -298,24 +302,6 @@ class WeatherActivity : AppCompatActivity(), WeatherView, GoogleApiClient.Connec
         mDbWorkerThread.start()
 
         mDb = WeatherDataBase.getInstance(applicationContext)
-    }
-
-    private fun fetchWeatherDataFromDb(cityName: String) {
-
-        val task = Runnable {
-            val weatherData =
-                    mDb?.weatherDataDao()?.getCityForecast(cityName = cityName)
-            mUiHandler.post({
-                if (weatherData == null || weatherData?.size == 0) {
-                    showNoData()
-                } else {
-                    weatherPresenter.convertToViewModel(weatherData, cityName)
-                    //bindDataWithUi(weatherData = weatherData?.get(0))
-                }
-            })
-        }
-        mDbWorkerThread.postTask(task)
-
     }
 
     override fun showNoData() {

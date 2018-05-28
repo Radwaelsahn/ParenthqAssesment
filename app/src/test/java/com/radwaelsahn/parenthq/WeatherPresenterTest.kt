@@ -56,13 +56,14 @@ class WeatherPresenterTest {
 //        Assert.assertThat(result, `is`("FAKE_STRING"))
 //    }
     class WeatherViewTest : WeatherView {
+        override fun updateCitiesUI(cities: List<String>) {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
         override fun showNoData() {
             TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
         }
 
-        override fun showCitiesSpinner(cities: List<String>) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-        }
 
         override fun showLoading() {
         }
@@ -70,7 +71,7 @@ class WeatherPresenterTest {
         override fun hideLoading() {
         }
 
-        override fun updateForecastRecycler(forecasts: List<ForecastItemViewModel>) {
+        override fun updateUI(forecasts: List<ForecastItemViewModel>) {
         }
 
         override fun showErrorToast(errorType: ErrorTypes) {

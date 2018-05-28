@@ -12,12 +12,10 @@ interface WeatherView {
     fun showLoading()
     fun hideLoading()
     fun showNoData()
-    fun updateForecastRecycler(forecasts: List<ForecastItemViewModel>)
+    fun updateUI(forecasts: List<ForecastItemViewModel>)
+    fun updateCitiesUI(cities: List<String>)
     fun showErrorToast(errorType: ErrorTypes)
     fun cityDetected(city: String)
     fun insertWeatherDataInDb(weatherData: WeatherData)
     fun showMessage(message: String)
-    fun showCitiesSpinner(cities:List<String>)
-
-
 }

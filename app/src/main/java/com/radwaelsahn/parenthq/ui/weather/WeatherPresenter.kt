@@ -29,8 +29,10 @@ class WeatherPresenter(var weatherView: WeatherView, applicationContext: Context
     lateinit var api: OpenWeatherAPI
 
     lateinit var weatherInteractor: WeatherInteractor
-    lateinit var cities: List<String>
+    var cities = emptyList<String>()
     private val mApplicationContext: Context
+
+    var selectedCity = ""
 
     init {
         mApplicationContext = applicationContext
@@ -82,12 +84,8 @@ class WeatherPresenter(var weatherView: WeatherView, applicationContext: Context
         for (city in cities)
             Log.i("city", city)
 
-        weatherView.showCitiesSpinner(cities)
-
+        weatherView.updateCitiesUI(cities)
         Log.i("radwa", "updateCities")
-        //Log.i("cities4", "result" + citiesDb!!.size.toString())
-
-
     }
 
     override fun returnCities(): List<String> {
@@ -117,7 +115,8 @@ class WeatherPresenter(var weatherView: WeatherView, applicationContext: Context
             weatherView.insertWeatherDataInDb(forecastEntityItem)
 
         }
-        weatherView.updateForecastRecycler(forecasts)
+        Log.i("radwa", "!!!")
+        weatherView.updateUI(forecasts)
 
     }
 
@@ -131,8 +130,8 @@ class WeatherPresenter(var weatherView: WeatherView, applicationContext: Context
                     description = forecastDetail.description, city = cityName)
             forecasts.add(forecastItem)
         }
-
-        weatherView.updateForecastRecycler(forecasts)
+        Log.i("radwa", "&&&")
+        weatherView.updateUI(forecasts)
     }
 
     private fun getDate(date: Long): String {
@@ -153,6 +152,7 @@ class WeatherPresenter(var weatherView: WeatherView, applicationContext: Context
             city = city.removeSuffix(" Governorate")
 
         Log.i("CITY", city)
+        selectedCity = city
         weatherView.cityDetected(city)
 
         return city
