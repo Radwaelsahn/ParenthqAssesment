@@ -33,7 +33,7 @@ class WeatherInteractor(applicationContext: Context) : IWeatherInteractor {
             mUiHandler.post({
                 if (citiesData != null && citiesData?.size > 0) {
                     Log.i("citiesData1", citiesData.size.toString())
-                    weatherPresenter.updateCitiesUI(citiesData)
+                    weatherPresenter.reloadCitiesSpinner(citiesData)
                 }
             })
         }

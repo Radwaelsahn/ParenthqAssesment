@@ -4,12 +4,12 @@ import android.content.Context
 import android.location.Address
 import android.location.Geocoder
 import android.location.Location
-import android.os.Handler
 import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.radwaelsahn.parenthq.data.db.Entities.WeatherData
-import com.radwaelsahn.parenthq.extensions.readJSONfromFile
+import com.radwaelsahn.parenthq.utils.isConnectedToInternet
+import com.radwaelsahn.parenthq.utils.readJSONfromFile
 import com.radwaelsahn.parenthq.model.Forcast
 import com.radwaelsahn.parenthq.model.ForecastItemViewModel
 import com.radwaelsahn.parenthq.model.response.City
@@ -23,22 +23,33 @@ import java.text.SimpleDateFormat
 import java.util.*
 import javax.inject.Inject
 
-class WeatherPresenter(var weatherView: WeatherView, applicationContext: Context) : WeatherContract {
+class WeatherPresenter(var weatherView: WeatherView, var applicationContext: Context) : WeatherContract {
 
     @Inject
     lateinit var api: OpenWeatherAPI
 
     var weatherInteractor: IWeatherInteractor
     var cities = emptyList<String>()
-    private val mApplicationContext: Context
 
     var selectedCity = ""
 
     init {
-        mApplicationContext = applicationContext
+
         weatherInteractor = WeatherInteractor(applicationContext)
     }
 
+
+    override fun getForecast(cityName: String, count: Int) {
+        Log.i("getForcast", cityName)
+        if (cityName.isNullOrEmpty()) {
+            weatherView.showMessage("please search for a city")
+            return
+        }
+        if (applicationContext.isConnectedToInternet())
+            getWeatherForcastforCity(cityName, count)
+        else
+            getForcastFromDB(cityName)
+    }
 
     override fun getWeatherForcastforCity(cityName: String, count: Int) {
 
@@ -64,7 +75,7 @@ class WeatherPresenter(var weatherView: WeatherView, applicationContext: Context
     }
 
     override fun loadCities(): List<City> {
-        val citiesJson = readJSONfromFile("cities.json", mApplicationContext)
+        val citiesJson = readJSONfromFile("cities.json", applicationContext)
         var gson = Gson()
         var cities = gson.fromJson<List<City>>(citiesJson, object : TypeToken<List<City>>() {}.type)
 
@@ -80,12 +91,12 @@ class WeatherPresenter(var weatherView: WeatherView, applicationContext: Context
     }
 
 
-    fun updateCitiesUI(citiesDb: List<String>) {
+    fun reloadCitiesSpinner(citiesDb: List<String>) {
         cities = citiesDb
         for (city in cities)
             Log.i("city", city)
 
-        weatherView.updateCitiesUI(cities)
+        weatherView.reloadCitiesSpinner(cities)
         Log.i("radwa", "updateCities")
     }
 
@@ -116,8 +127,8 @@ class WeatherPresenter(var weatherView: WeatherView, applicationContext: Context
             weatherInteractor.insertWeatherDataInDb(forecastEntityItem)
 
         }
-        Log.i("radwa", "!!!")
-        weatherView.updateUI(forecasts)
+
+        weatherView.refreshForecastList(forecasts)
         if (!cities.contains(cityName))
             getCitiesFromDB()
 
@@ -133,8 +144,8 @@ class WeatherPresenter(var weatherView: WeatherView, applicationContext: Context
                     description = forecastDetail.description, city = cityName)
             forecasts.add(forecastItem)
         }
-        Log.i("radwa", "&&&")
-        weatherView.updateUI(forecasts)
+
+        weatherView.refreshForecastList(forecasts)
     }
 
     private fun getDate(date: Long): String {
@@ -156,7 +167,7 @@ class WeatherPresenter(var weatherView: WeatherView, applicationContext: Context
 
         Log.i("CITY", city)
         selectedCity = city
-        weatherView.cityDetected(city)
+        weatherView.cityDetectedFromGps(city)
 
         return city
     }
@@ -171,6 +182,6 @@ class WeatherPresenter(var weatherView: WeatherView, applicationContext: Context
 
     override fun clearDataFromDB() {
         weatherInteractor.clearData()
-        updateCitiesUI(emptyList())
+        reloadCitiesSpinner(emptyList())
     }
 }

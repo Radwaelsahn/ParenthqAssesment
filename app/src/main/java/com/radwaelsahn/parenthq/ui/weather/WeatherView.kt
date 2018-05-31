@@ -9,9 +9,9 @@ interface WeatherView {
     fun showLoading()
     fun hideLoading()
     fun showNoData()
-    fun updateUI(forecasts: List<ForecastItemViewModel>)
-    fun updateCitiesUI(cities: List<String>)
+    fun refreshForecastList(forecasts: List<ForecastItemViewModel>)
+    fun reloadCitiesSpinner(cities: List<String>)
     fun showErrorToast(errorType: ErrorTypes)
-    fun cityDetected(city: String)
+    fun cityDetectedFromGps(city: String)
     fun showMessage(message: String)
 }

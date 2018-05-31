@@ -5,7 +5,7 @@ import android.location.Location
 import com.radwaelsahn.parenthq.model.response.City
 
 interface WeatherContract {
-
+    fun getForecast(cityName: String, count: Int)
     fun getWeatherForcastforCity(city: String, count: Int)
     fun getCitiesFromDB():List<String>
     fun returnCities(): List<String>
